@@ -9,6 +9,7 @@ SRC := \
 	src/cpu/cpu_x86.c \
 	src/cpu/cpu_arm64.c \
 	src/gpu/gpu_nvidia.c \
+	src/gpu/gpu_nvidia_cuda.c \
 	src/gpu/gpu_amd.c \
 	src/format/text.c \
 	src/format/json.c
@@ -18,6 +19,9 @@ all: thermal_monitor
 thermal_monitor: $(SRC) include/thermal_monitor.h
 	$(CC) $(CPPFLAGS) $(CFLAGS) -o $@ $(SRC) $(LDFLAGS)
 
+cuda-example:
+	nvcc -O2 -o examples/cuda_heatload examples/cuda_heatload.cu
+
 kernel:
 	$(MAKE) -C kernel
 
@@ -25,5 +29,4 @@ clean:
 	rm -f thermal_monitor
 	$(MAKE) -C kernel clean || true
 
-.PHONY: all kernel clean
-
+.PHONY: all kernel clean cuda-example

@@ -44,15 +44,28 @@ void tm_print_snapshot_text(const tm_snapshot_t *snap) {
 
     for (int i = 0; i < snap->nvidia_gpu_count; ++i) {
         const tm_nvidia_gpu_t *gpu = &snap->nvidia_gpus[i];
-        printf("NVIDIA GPU %d: %s temp=%.1fC mem=%.1fC power=%.1f/%.1fW util=%u%% mem=%u%%\n",
+        printf("NVIDIA GPU %d: %s temp=%.1fC mem=%.1fC power=%.1f/%.1fW sm=%uMHz memclk=%uMHz util=%u%% mem=%u%%\n",
                gpu->gpu_index,
                gpu->name,
                gpu->gpu_temp_c,
                gpu->memory_temp_c,
                gpu->power_draw_w,
                gpu->power_limit_w,
+               gpu->sm_clock_mhz,
+               gpu->mem_clock_mhz,
                gpu->gpu_util_pct,
                gpu->mem_util_pct);
+        if (gpu->cuda_ordinal >= 0) {
+            printf("  CUDA ordinal=%d cc=%d.%d sms=%d vram=%zuB driver=%d runtime=%d pci=%s\n",
+                   gpu->cuda_ordinal,
+                   gpu->cuda_compute_major,
+                   gpu->cuda_compute_minor,
+                   gpu->cuda_multiprocessors,
+                   gpu->cuda_total_memory_bytes,
+                   gpu->cuda_driver_version,
+                   gpu->cuda_runtime_version,
+                   gpu->pci_bus_id);
+        }
     }
 
     for (int i = 0; i < snap->amd_gpu_count; ++i) {
@@ -67,4 +80,3 @@ void tm_print_snapshot_text(const tm_snapshot_t *snap) {
                gpu->power_cap_w);
     }
 }
-

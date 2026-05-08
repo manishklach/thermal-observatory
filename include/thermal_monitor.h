@@ -23,7 +23,8 @@ typedef enum {
     TM_CAP_NVIDIA_NVML      = 1u << 5,
     TM_CAP_AMD_ROCM_SMI     = 1u << 6,
     TM_CAP_AMDGPU_HWMON     = 1u << 7,
-    TM_CAP_EXPERIMENTAL_KMOD = 1u << 8
+    TM_CAP_EXPERIMENTAL_KMOD = 1u << 8,
+    TM_CAP_NVIDIA_CUDA      = 1u << 9
 } tm_capability_t;
 
 typedef enum {
@@ -64,13 +65,23 @@ typedef struct {
     int gpu_index;
     char name[128];
     char uuid[96];
+    char pci_bus_id[32];
     double gpu_temp_c;
     double memory_temp_c;
     double power_draw_w;
     double power_limit_w;
+    uint32_t sm_clock_mhz;
+    uint32_t mem_clock_mhz;
     uint32_t gpu_util_pct;
     uint32_t mem_util_pct;
     uint64_t throttle_reasons;
+    int cuda_ordinal;
+    int cuda_compute_major;
+    int cuda_compute_minor;
+    int cuda_multiprocessors;
+    int cuda_driver_version;
+    int cuda_runtime_version;
+    size_t cuda_total_memory_bytes;
 } tm_nvidia_gpu_t;
 
 typedef struct {
@@ -131,6 +142,6 @@ int tm_collect_x86(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_arm64(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_nvidia(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_amd(tm_context_t *ctx, tm_snapshot_t *snap);
+int tm_collect_nvidia_cuda(tm_context_t *ctx, tm_snapshot_t *snap);
 
 #endif
-

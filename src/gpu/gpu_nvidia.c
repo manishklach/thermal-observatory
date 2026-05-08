@@ -11,10 +11,21 @@ typedef struct {
     unsigned int gpu;
     unsigned int memory;
 } nvmlUtilization_t;
+typedef struct {
+    char busIdLegacy[16];
+    unsigned int domain;
+    unsigned int bus;
+    unsigned int device;
+    unsigned int pciDeviceId;
+    unsigned int pciSubSystemId;
+    char busId[32];
+} nvmlPciInfo_t;
 
 #define NVML_SUCCESS 0
 #define NVML_TEMPERATURE_GPU 0
 #define NVML_TEMPERATURE_MEM 2
+#define NVML_CLOCK_SM 1
+#define NVML_CLOCK_MEM 2
 
 static void *nvml_handle;
 static nvmlReturn_t (*p_nvmlInit)(void);
@@ -26,8 +37,10 @@ static nvmlReturn_t (*p_nvmlDeviceGetUUID)(nvmlDevice_t, char *, unsigned int);
 static nvmlReturn_t (*p_nvmlDeviceGetTemperature)(nvmlDevice_t, unsigned int, unsigned int *);
 static nvmlReturn_t (*p_nvmlDeviceGetPowerUsage)(nvmlDevice_t, unsigned int *);
 static nvmlReturn_t (*p_nvmlDeviceGetEnforcedPowerLimit)(nvmlDevice_t, unsigned int *);
+static nvmlReturn_t (*p_nvmlDeviceGetClockInfo)(nvmlDevice_t, unsigned int, unsigned int *);
 static nvmlReturn_t (*p_nvmlDeviceGetUtilizationRates)(nvmlDevice_t, nvmlUtilization_t *);
 static nvmlReturn_t (*p_nvmlDeviceGetCurrentClocksThrottleReasons)(nvmlDevice_t, unsigned long long *);
+static nvmlReturn_t (*p_nvmlDeviceGetPciInfo_v3)(nvmlDevice_t, nvmlPciInfo_t *);
 
 static int load_nvml(void) {
     const char *paths[] = {
@@ -57,8 +70,10 @@ static int load_nvml(void) {
     LOAD(nvmlDeviceGetTemperature);
     LOAD(nvmlDeviceGetPowerUsage);
     LOAD(nvmlDeviceGetEnforcedPowerLimit);
+    LOAD(nvmlDeviceGetClockInfo);
     LOAD(nvmlDeviceGetUtilizationRates);
     LOAD(nvmlDeviceGetCurrentClocksThrottleReasons);
+    LOAD(nvmlDeviceGetPciInfo_v3);
 #undef LOAD
     return p_nvmlInit && p_nvmlShutdown && p_nvmlDeviceGetCount ? 0 : -1;
 }
@@ -84,6 +99,7 @@ int tm_collect_nvidia(tm_context_t *ctx, tm_snapshot_t *snap) {
         nvmlDevice_t dev = NULL;
         unsigned int value = 0;
         nvmlUtilization_t util = {0};
+        nvmlPciInfo_t pci = {0};
         unsigned long long throttle = 0;
 
         if (p_nvmlDeviceGetHandleByIndex(i, &dev) != NVML_SUCCESS) {
@@ -92,8 +108,12 @@ int tm_collect_nvidia(tm_context_t *ctx, tm_snapshot_t *snap) {
 
         memset(gpu, 0, sizeof(*gpu));
         gpu->gpu_index = (int)i;
+        gpu->cuda_ordinal = -1;
         p_nvmlDeviceGetName(dev, gpu->name, sizeof(gpu->name));
         p_nvmlDeviceGetUUID(dev, gpu->uuid, sizeof(gpu->uuid));
+        if (p_nvmlDeviceGetPciInfo_v3 && p_nvmlDeviceGetPciInfo_v3(dev, &pci) == NVML_SUCCESS) {
+            strncpy(gpu->pci_bus_id, pci.busId, sizeof(gpu->pci_bus_id) - 1);
+        }
 
         if (p_nvmlDeviceGetTemperature(dev, NVML_TEMPERATURE_GPU, &value) == NVML_SUCCESS) {
             gpu->gpu_temp_c = (double)value;
@@ -106,6 +126,12 @@ int tm_collect_nvidia(tm_context_t *ctx, tm_snapshot_t *snap) {
         }
         if (p_nvmlDeviceGetEnforcedPowerLimit(dev, &value) == NVML_SUCCESS) {
             gpu->power_limit_w = (double)value / 1000.0;
+        }
+        if (p_nvmlDeviceGetClockInfo && p_nvmlDeviceGetClockInfo(dev, NVML_CLOCK_SM, &value) == NVML_SUCCESS) {
+            gpu->sm_clock_mhz = value;
+        }
+        if (p_nvmlDeviceGetClockInfo && p_nvmlDeviceGetClockInfo(dev, NVML_CLOCK_MEM, &value) == NVML_SUCCESS) {
+            gpu->mem_clock_mhz = value;
         }
         if (p_nvmlDeviceGetUtilizationRates(dev, &util) == NVML_SUCCESS) {
             gpu->gpu_util_pct = util.gpu;
@@ -123,4 +149,3 @@ int tm_collect_nvidia(tm_context_t *ctx, tm_snapshot_t *snap) {
     p_nvmlShutdown();
     return 0;
 }
-

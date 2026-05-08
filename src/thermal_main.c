@@ -26,6 +26,7 @@ int tm_collect_snapshot(tm_context_t *ctx, tm_snapshot_t *snap) {
         tm_collect_arm64(ctx, snap);
     }
     tm_collect_nvidia(ctx, snap);
+    tm_collect_nvidia_cuda(ctx, snap);
     tm_collect_amd(ctx, snap);
     return 0;
 }
@@ -78,4 +79,3 @@ int main(int argc, char **argv) {
 
     return 0;
 }
-
