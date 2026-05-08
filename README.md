@@ -174,7 +174,43 @@ The public API in [include/thermal_monitor.h](/C:/Users/ManishKL/Documents/Playg
 - generic `hwmon` sensors
 - generic thermal zones
 
-The current JSON output is intentionally still conservative and top-level. Expanding it into full per-device structured JSON is a good next milestone.
+The JSON output now emits full structured sections for:
+
+- CPU packages and per-core values
+- ARM clusters
+- NVIDIA GPUs with CUDA correlation metadata
+- AMD GPUs
+- `hwmon` sensors
+- thermal zones
+- capability mask plus capability names
+- summary counts
+
+The current schema version is `0.2.0`. The next refinement is per-metric provenance objects instead of per-object source strings.
+
+See the synthetic schema example in [samples/synthetic-linux-x86-mock-snapshot.json](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/samples/synthetic-linux-x86-mock-snapshot.json).
+
+## Testability
+
+Linux sysfs-based collectors now support `TM_SYSROOT`, which allows the repo to run against mocked fixture trees instead of live `/sys` paths.
+
+That currently covers:
+
+- generic thermal zones
+- generic `hwmon`
+- x86 `coretemp`
+- x86 `powercap` RAPL
+- arm64 thermal zones and `cpufreq`
+- AMD `amdgpu` hwmon fallback
+
+Fixture scaffolding lives under [tests/](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/tests), with the initial mocked tree at [tests/fixtures/linux_x86_mock](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/tests/fixtures/linux_x86_mock).
+
+Example fixture run on Linux:
+
+```bash
+export TM_SYSROOT=$PWD/tests/fixtures/linux_x86_mock
+./thermal_monitor --json > output.json
+python3 tests/check_json_schema.py output.json
+```
 
 ## Validation Strategy
 
@@ -197,10 +233,10 @@ For each system:
 Near-term:
 
 - make the userspace collectors compile and run cleanly on real Linux hosts
-- expand JSON output to full structured per-device snapshots
 - add ROCm runtime correlation similar to CUDA
 - add Prometheus textfile export
 - add stronger test fixtures and sample captures
+- add CI around fixture-backed Linux collector tests
 
 Later:
 

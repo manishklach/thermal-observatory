@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
     signal(SIGTERM, handle_signal);
 
     do {
-        char json_buf[512];
+        char json_buf[65536];
 
         tm_collect_snapshot(&ctx, &snap);
         if (ctx.want_json) {

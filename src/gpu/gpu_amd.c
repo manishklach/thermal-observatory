@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "../../include/thermal_monitor.h"
+#include "../platform/linux_paths.h"
 
 #include <dlfcn.h>
 #include <errno.h>
@@ -69,8 +70,10 @@ static int load_rsmi(void) {
 
 static int collect_amdgpu_hwmon(tm_snapshot_t *snap) {
     glob_t names;
+    char pattern[256];
 
-    if (glob("/sys/class/drm/card*/device/hwmon/hwmon*/name", 0, NULL, &names) != 0) {
+    tm_glob_join(pattern, sizeof(pattern), "/sys/class/drm/card*/device/hwmon/hwmon*/name");
+    if (glob(pattern, 0, NULL, &names) != 0) {
         globfree(&names);
         return 0;
     }
@@ -177,4 +180,3 @@ int tm_collect_amd(tm_context_t *ctx, tm_snapshot_t *snap) {
 
     return collect_amdgpu_hwmon(snap);
 }
-

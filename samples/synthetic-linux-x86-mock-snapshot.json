@@ -1,0 +1,63 @@
+{
+  "schema_version": "0.2.0",
+  "timestamp": {
+    "sec": 0,
+    "nsec": 0
+  },
+  "arch": "x86_64",
+  "capability_mask": 7,
+  "capabilities": [
+    "linux_hwmon",
+    "linux_thermal",
+    "linux_rapl"
+  ],
+  "cpu_packages": [
+    {
+      "package_id": 0,
+      "source": "coretemp+powercap",
+      "package_temp_c": 44.0,
+      "tjmax_c": 100.0,
+      "rapl_energy_uj": 123456789.0,
+      "power_limit_1_w": 250.0,
+      "power_limit_2_w": 300.0,
+      "cores": [
+        {
+          "core_id": 0,
+          "temp_c": 44.0,
+          "crit_c": 100.0,
+          "max_c": 85.0,
+          "throttling": false
+        }
+      ]
+    }
+  ],
+  "arm_clusters": [],
+  "nvidia_gpus": [],
+  "amd_gpus": [],
+  "hwmon_sensors": [
+    {
+      "source": "hwmon",
+      "name": "coretemp",
+      "label": "Package id 0",
+      "value": 45.5,
+      "unit": "celsius"
+    }
+  ],
+  "thermal_zones": [
+    {
+      "source": "thermal_zone",
+      "name": "thermal_zone0",
+      "label": "x86_pkg_temp",
+      "value": 47.0,
+      "unit": "celsius"
+    }
+  ],
+  "summary": {
+    "cpu_package_count": 1,
+    "arm_cluster_count": 0,
+    "nvidia_gpu_count": 0,
+    "amd_gpu_count": 0,
+    "hwmon_sensor_count": 1,
+    "thermal_zone_count": 1
+  }
+}

@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "../../include/thermal_monitor.h"
+#include "linux_paths.h"
 
 #include <errno.h>
 #include <glob.h>
@@ -55,14 +56,17 @@ void tm_context_init(tm_context_t *ctx) {
 int tm_collect_generic_linux(tm_context_t *ctx, tm_snapshot_t *snap) {
     glob_t zones;
     glob_t hwmons;
+    char pattern[256];
     int i;
 
     (void)ctx;
 
-    if (glob("/sys/class/thermal/thermal_zone*/temp", 0, NULL, &zones) == 0) {
+    tm_glob_join(pattern, sizeof(pattern), "/sys/class/thermal/thermal_zone*/temp");
+    if (glob(pattern, 0, NULL, &zones) == 0) {
         for (i = 0; i < (int)zones.gl_pathc && snap->thermal_zone_count < TM_MAX_THERMAL_ZONES; ++i) {
             tm_sensor_t *sensor = &snap->thermal_zones[snap->thermal_zone_count];
             char zone_name[64] = {0};
+            char virtual_path[512];
             char base[256];
             char type_path[256];
             long temp_mc = 0;
@@ -71,11 +75,12 @@ int tm_collect_generic_linux(tm_context_t *ctx, tm_snapshot_t *snap) {
                 continue;
             }
 
-            if (sscanf(zones.gl_pathv[i], "/sys/class/thermal/%63[^/]/temp", zone_name) != 1) {
+            tm_strip_sysroot_path(zones.gl_pathv[i], virtual_path, sizeof(virtual_path));
+            if (sscanf(virtual_path, "/sys/class/thermal/%63[^/]/temp", zone_name) != 1) {
                 continue;
             }
 
-            snprintf(base, sizeof(base), "/sys/class/thermal/%s", zone_name);
+            snprintf(base, sizeof(base), "%s/sys/class/thermal/%s", tm_sysroot(), zone_name);
             snprintf(type_path, sizeof(type_path), "%s/type", base);
 
             memset(sensor, 0, sizeof(*sensor));
@@ -89,10 +94,12 @@ int tm_collect_generic_linux(tm_context_t *ctx, tm_snapshot_t *snap) {
     }
     globfree(&zones);
 
-    if (glob("/sys/class/hwmon/hwmon*/temp*_input", 0, NULL, &hwmons) == 0) {
+    tm_glob_join(pattern, sizeof(pattern), "/sys/class/hwmon/hwmon*/temp*_input");
+    if (glob(pattern, 0, NULL, &hwmons) == 0) {
         for (i = 0; i < (int)hwmons.gl_pathc && snap->hwmon_sensor_count < TM_MAX_HWMON_SENSORS; ++i) {
             tm_sensor_t *sensor = &snap->hwmon_sensors[snap->hwmon_sensor_count];
             char hwmon[64] = {0};
+            char virtual_path[512];
             char input_path[512];
             char label_path[512];
             char name_path[512];
@@ -101,14 +108,15 @@ int tm_collect_generic_linux(tm_context_t *ctx, tm_snapshot_t *snap) {
             if (read_long(hwmons.gl_pathv[i], &temp_mc) != 0) {
                 continue;
             }
-            if (sscanf(hwmons.gl_pathv[i], "/sys/class/hwmon/%63[^/]/", hwmon) != 1) {
+            tm_strip_sysroot_path(hwmons.gl_pathv[i], virtual_path, sizeof(virtual_path));
+            if (sscanf(virtual_path, "/sys/class/hwmon/%63[^/]/", hwmon) != 1) {
                 continue;
             }
 
             memset(sensor, 0, sizeof(*sensor));
             strncpy(input_path, hwmons.gl_pathv[i], sizeof(input_path) - 1);
             strncpy(label_path, hwmons.gl_pathv[i], sizeof(label_path) - 1);
-            snprintf(name_path, sizeof(name_path), "/sys/class/hwmon/%s/name", hwmon);
+            snprintf(name_path, sizeof(name_path), "%s/sys/class/hwmon/%s/name", tm_sysroot(), hwmon);
 
             if (strstr(label_path, "_input")) {
                 strcpy(strstr(label_path, "_input"), "_label");
@@ -129,4 +137,3 @@ int tm_collect_generic_linux(tm_context_t *ctx, tm_snapshot_t *snap) {
 
     return 0;
 }
-

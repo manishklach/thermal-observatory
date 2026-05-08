@@ -5,6 +5,7 @@ LDFLAGS += -ldl
 
 SRC := \
 	src/thermal_main.c \
+	src/platform/linux_paths.c \
 	src/platform/linux_sysfs.c \
 	src/cpu/cpu_x86.c \
 	src/cpu/cpu_arm64.c \
@@ -22,6 +23,9 @@ thermal_monitor: $(SRC) include/thermal_monitor.h
 cuda-example:
 	nvcc -O2 -o examples/cuda_heatload examples/cuda_heatload.cu
 
+fixture-test:
+	bash tests/run_fixture_test.sh
+
 kernel:
 	$(MAKE) -C kernel
 
@@ -29,4 +33,4 @@ clean:
 	rm -f thermal_monitor
 	$(MAKE) -C kernel clean || true
 
-.PHONY: all kernel clean cuda-example
+.PHONY: all kernel clean cuda-example fixture-test

@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "../../include/thermal_monitor.h"
+#include "../platform/linux_paths.h"
 
 #include <errno.h>
 #include <glob.h>
@@ -21,10 +22,12 @@ static int read_long(const char *path, long *value) {
 
 static void collect_coretemp(tm_snapshot_t *snap) {
     glob_t labels;
+    char pattern[256];
     int package_id = 0;
     int core_count = 0;
 
-    if (glob("/sys/devices/platform/coretemp.*/hwmon/hwmon*/temp*_label", 0, NULL, &labels) != 0) {
+    tm_glob_join(pattern, sizeof(pattern), "/sys/devices/platform/coretemp.*/hwmon/hwmon*/temp*_label");
+    if (glob(pattern, 0, NULL, &labels) != 0) {
         globfree(&labels);
         return;
     }
@@ -99,6 +102,7 @@ static void collect_coretemp(tm_snapshot_t *snap) {
 static void collect_rapl(tm_snapshot_t *snap) {
     tm_cpu_package_t *pkg;
     char base[256];
+    char alt_base[256];
     char path[256];
     long energy_uj = 0;
     long pl1_uw = 0;
@@ -109,19 +113,29 @@ static void collect_rapl(tm_snapshot_t *snap) {
     }
     pkg = &snap->cpu_packages[0];
 
-    snprintf(base, sizeof(base), "/sys/class/powercap/intel-rapl/intel-rapl:0");
+    snprintf(base, sizeof(base), "%s/sys/class/powercap/intel-rapl/intel-rapl:0", tm_sysroot());
+    snprintf(alt_base, sizeof(alt_base), "%s/sys/class/powercap/intel-rapl/intel-rapl_0", tm_sysroot());
     snprintf(path, sizeof(path), "%s/energy_uj", base);
+    if (read_long(path, &energy_uj) != 0) {
+        snprintf(path, sizeof(path), "%s/energy_uj", alt_base);
+    }
     if (read_long(path, &energy_uj) == 0) {
         pkg->rapl_energy_uj = (double)energy_uj;
         snap->capabilities |= TM_CAP_LINUX_RAPL;
     }
 
     snprintf(path, sizeof(path), "%s/constraint_0_power_limit_uw", base);
+    if (read_long(path, &pl1_uw) != 0) {
+        snprintf(path, sizeof(path), "%s/constraint_0_power_limit_uw", alt_base);
+    }
     if (read_long(path, &pl1_uw) == 0) {
         pkg->power_limit_1_w = (double)pl1_uw / 1000000.0;
     }
 
     snprintf(path, sizeof(path), "%s/constraint_1_power_limit_uw", base);
+    if (read_long(path, &pl2_uw) != 0) {
+        snprintf(path, sizeof(path), "%s/constraint_1_power_limit_uw", alt_base);
+    }
     if (read_long(path, &pl2_uw) == 0) {
         pkg->power_limit_2_w = (double)pl2_uw / 1000000.0;
     }
@@ -133,4 +147,3 @@ int tm_collect_x86(tm_context_t *ctx, tm_snapshot_t *snap) {
     collect_rapl(snap);
     return 0;
 }
-
