@@ -27,7 +27,10 @@ int tm_collect_snapshot(tm_context_t *ctx, tm_snapshot_t *snap) {
     }
     tm_collect_nvidia(ctx, snap);
     tm_collect_nvidia_cuda(ctx, snap);
+    tm_collect_nvidia_dcgm(ctx, snap);
     tm_collect_amd(ctx, snap);
+    tm_collect_ipmi(ctx, snap);
+    tm_collect_redfish(ctx, snap);
     return 0;
 }
 

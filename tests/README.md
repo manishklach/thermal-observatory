@@ -51,3 +51,5 @@ The next step is to wire this into CI on a Linux runner and add separate fixture
 - arm64
 - NVIDIA
 - AMD
+- IPMI
+- Redfish

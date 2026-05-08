@@ -23,6 +23,9 @@ def main() -> int:
         "amd_gpus",
         "hwmon_sensors",
         "thermal_zones",
+        "board_sensors",
+        "fan_sensors",
+        "psu_sensors",
         "summary",
     ]
 
@@ -34,9 +37,15 @@ def main() -> int:
     assert isinstance(data["cpu_packages"], list)
     assert isinstance(data["hwmon_sensors"], list)
     assert isinstance(data["thermal_zones"], list)
+    assert isinstance(data["board_sensors"], list)
+    assert isinstance(data["fan_sensors"], list)
+    assert isinstance(data["psu_sensors"], list)
     assert "cpu_package_count" in data["summary"]
     assert "hwmon_sensor_count" in data["summary"]
     assert "thermal_zone_count" in data["summary"]
+    assert "board_sensor_count" in data["summary"]
+    assert "fan_sensor_count" in data["summary"]
+    assert "psu_sensor_count" in data["summary"]
 
     print("json schema check passed")
     return 0
@@ -44,4 +53,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

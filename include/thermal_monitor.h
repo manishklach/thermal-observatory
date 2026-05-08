@@ -13,6 +13,9 @@
 #define TM_MAX_AMD_GPUS 16
 #define TM_MAX_HWMON_SENSORS 128
 #define TM_MAX_THERMAL_ZONES 128
+#define TM_MAX_BOARD_SENSORS 128
+#define TM_MAX_FANS 64
+#define TM_MAX_PSUS 16
 
 typedef enum {
     TM_CAP_LINUX_HWMON      = 1u << 0,
@@ -24,7 +27,10 @@ typedef enum {
     TM_CAP_AMD_ROCM_SMI     = 1u << 6,
     TM_CAP_AMDGPU_HWMON     = 1u << 7,
     TM_CAP_EXPERIMENTAL_KMOD = 1u << 8,
-    TM_CAP_NVIDIA_CUDA      = 1u << 9
+    TM_CAP_NVIDIA_CUDA      = 1u << 9,
+    TM_CAP_PLATFORM_IPMI    = 1u << 10,
+    TM_CAP_PLATFORM_REDFISH = 1u << 11,
+    TM_CAP_NVIDIA_DCGM      = 1u << 12
 } tm_capability_t;
 
 typedef enum {
@@ -103,6 +109,30 @@ typedef struct {
 } tm_sensor_t;
 
 typedef struct {
+    char name[64];
+    char sensor_type[32];
+    char source[32];
+    double value;
+    char unit[16];
+} tm_board_sensor_t;
+
+typedef struct {
+    char name[64];
+    char source[32];
+    double rpm;
+    double pwm_pct;
+} tm_fan_sensor_t;
+
+typedef struct {
+    char name[64];
+    char source[32];
+    double inlet_temp_c;
+    double exhaust_temp_c;
+    double power_w;
+    bool present;
+} tm_psu_sensor_t;
+
+typedef struct {
     struct timespec timestamp;
     tm_arch_t arch;
     uint32_t capabilities;
@@ -124,6 +154,15 @@ typedef struct {
 
     int thermal_zone_count;
     tm_sensor_t thermal_zones[TM_MAX_THERMAL_ZONES];
+
+    int board_sensor_count;
+    tm_board_sensor_t board_sensors[TM_MAX_BOARD_SENSORS];
+
+    int fan_sensor_count;
+    tm_fan_sensor_t fan_sensors[TM_MAX_FANS];
+
+    int psu_sensor_count;
+    tm_psu_sensor_t psu_sensors[TM_MAX_PSUS];
 } tm_snapshot_t;
 
 typedef struct {
@@ -143,5 +182,8 @@ int tm_collect_arm64(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_nvidia(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_amd(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_nvidia_cuda(tm_context_t *ctx, tm_snapshot_t *snap);
+int tm_collect_nvidia_dcgm(tm_context_t *ctx, tm_snapshot_t *snap);
+int tm_collect_ipmi(tm_context_t *ctx, tm_snapshot_t *snap);
+int tm_collect_redfish(tm_context_t *ctx, tm_snapshot_t *snap);
 
 #endif

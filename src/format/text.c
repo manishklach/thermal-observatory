@@ -79,4 +79,26 @@ void tm_print_snapshot_text(const tm_snapshot_t *snap) {
                gpu->avg_power_w,
                gpu->power_cap_w);
     }
+
+    for (int i = 0; i < snap->board_sensor_count; ++i) {
+        const tm_board_sensor_t *sensor = &snap->board_sensors[i];
+        printf("Board sensor: %s type=%s value=%.1f %s source=%s\n",
+               sensor->name, sensor->sensor_type, sensor->value, sensor->unit, sensor->source);
+    }
+
+    for (int i = 0; i < snap->fan_sensor_count; ++i) {
+        const tm_fan_sensor_t *fan = &snap->fan_sensors[i];
+        printf("Fan: %s rpm=%.0f source=%s\n", fan->name, fan->rpm, fan->source);
+    }
+
+    for (int i = 0; i < snap->psu_sensor_count; ++i) {
+        const tm_psu_sensor_t *psu = &snap->psu_sensors[i];
+        printf("PSU: %s inlet=%.1fC exhaust=%.1fC power=%.1fW present=%s source=%s\n",
+               psu->name,
+               psu->inlet_temp_c,
+               psu->exhaust_temp_c,
+               psu->power_w,
+               psu->present ? "true" : "false",
+               psu->source);
+    }
 }

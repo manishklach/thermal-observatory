@@ -7,10 +7,13 @@ SRC := \
 	src/thermal_main.c \
 	src/platform/linux_paths.c \
 	src/platform/linux_sysfs.c \
+	src/platform/ipmi.c \
+	src/platform/redfish.c \
 	src/cpu/cpu_x86.c \
 	src/cpu/cpu_arm64.c \
 	src/gpu/gpu_nvidia.c \
 	src/gpu/gpu_nvidia_cuda.c \
+	src/gpu/nvidia_dcgm.c \
 	src/gpu/gpu_amd.c \
 	src/format/text.c \
 	src/format/json.c

@@ -1,0 +1,4 @@
+Inlet Temp,temperature,24.5,celsius
+Exhaust Temp,temperature,39.0,celsius
+PSU 1 Power,power,812.0,watts
+Rear Fan Bank,fan,78.0,pct

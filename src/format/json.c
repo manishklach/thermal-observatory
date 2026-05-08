@@ -113,7 +113,10 @@ static int append_capabilities(tm_json_writer_t *w, uint32_t caps) {
         { TM_CAP_AMD_ROCM_SMI, "amd_rocm_smi" },
         { TM_CAP_AMDGPU_HWMON, "amdgpu_hwmon" },
         { TM_CAP_EXPERIMENTAL_KMOD, "experimental_kmod" },
-        { TM_CAP_NVIDIA_CUDA, "nvidia_cuda" }
+        { TM_CAP_NVIDIA_CUDA, "nvidia_cuda" },
+        { TM_CAP_PLATFORM_IPMI, "platform_ipmi" },
+        { TM_CAP_PLATFORM_REDFISH, "platform_redfish" },
+        { TM_CAP_NVIDIA_DCGM, "nvidia_dcgm" }
     };
 
     if (appendf(w, "[") != 0) {
@@ -388,6 +391,75 @@ int tm_snapshot_to_json(const tm_snapshot_t *snap, char *buf, size_t len) {
         return -1;
     }
 
+    if (appendf(&w, ",\"board_sensors\":[") != 0) {
+        return -1;
+    }
+    for (int i = 0; i < snap->board_sensor_count; ++i) {
+        const tm_board_sensor_t *sensor = &snap->board_sensors[i];
+        if (i > 0 && appendf(&w, ",") != 0) {
+            return -1;
+        }
+        if (appendf(&w, "{\"name\":") != 0 ||
+            append_json_string(&w, sensor->name) != 0 ||
+            appendf(&w, ",\"sensor_type\":") != 0 ||
+            append_json_string(&w, sensor->sensor_type) != 0 ||
+            appendf(&w, ",\"source\":") != 0 ||
+            append_json_string(&w, sensor->source) != 0 ||
+            appendf(&w, ",\"value\":%.3f,\"unit\":", sensor->value) != 0 ||
+            append_json_string(&w, sensor->unit) != 0 ||
+            appendf(&w, "}") != 0) {
+            return -1;
+        }
+    }
+    if (appendf(&w, "]") != 0) {
+        return -1;
+    }
+
+    if (appendf(&w, ",\"fan_sensors\":[") != 0) {
+        return -1;
+    }
+    for (int i = 0; i < snap->fan_sensor_count; ++i) {
+        const tm_fan_sensor_t *fan = &snap->fan_sensors[i];
+        if (i > 0 && appendf(&w, ",") != 0) {
+            return -1;
+        }
+        if (appendf(&w, "{\"name\":") != 0 ||
+            append_json_string(&w, fan->name) != 0 ||
+            appendf(&w, ",\"source\":") != 0 ||
+            append_json_string(&w, fan->source) != 0 ||
+            appendf(&w, ",\"rpm\":%.3f,\"pwm_pct\":%.3f}", fan->rpm, fan->pwm_pct) != 0) {
+            return -1;
+        }
+    }
+    if (appendf(&w, "]") != 0) {
+        return -1;
+    }
+
+    if (appendf(&w, ",\"psu_sensors\":[") != 0) {
+        return -1;
+    }
+    for (int i = 0; i < snap->psu_sensor_count; ++i) {
+        const tm_psu_sensor_t *psu = &snap->psu_sensors[i];
+        if (i > 0 && appendf(&w, ",") != 0) {
+            return -1;
+        }
+        if (appendf(&w, "{\"name\":") != 0 ||
+            append_json_string(&w, psu->name) != 0 ||
+            appendf(&w, ",\"source\":") != 0 ||
+            append_json_string(&w, psu->source) != 0 ||
+            appendf(&w,
+                    ",\"inlet_temp_c\":%.3f,\"exhaust_temp_c\":%.3f,\"power_w\":%.3f,\"present\":%s}",
+                    psu->inlet_temp_c,
+                    psu->exhaust_temp_c,
+                    psu->power_w,
+                    psu->present ? "true" : "false") != 0) {
+            return -1;
+        }
+    }
+    if (appendf(&w, "]") != 0) {
+        return -1;
+    }
+
     if (appendf(&w,
                 ",\"summary\":{"
                 "\"cpu_package_count\":%d,"
@@ -395,7 +467,10 @@ int tm_snapshot_to_json(const tm_snapshot_t *snap, char *buf, size_t len) {
                 "\"nvidia_gpu_count\":%d,"
                 "\"amd_gpu_count\":%d,"
                 "\"hwmon_sensor_count\":%d,"
-                "\"thermal_zone_count\":%d"
+                "\"thermal_zone_count\":%d,"
+                "\"board_sensor_count\":%d,"
+                "\"fan_sensor_count\":%d,"
+                "\"psu_sensor_count\":%d"
                 "}"
                 "}",
                 snap->cpu_package_count,
@@ -403,10 +478,12 @@ int tm_snapshot_to_json(const tm_snapshot_t *snap, char *buf, size_t len) {
                 snap->nvidia_gpu_count,
                 snap->amd_gpu_count,
                 snap->hwmon_sensor_count,
-                snap->thermal_zone_count) != 0) {
+                snap->thermal_zone_count,
+                snap->board_sensor_count,
+                snap->fan_sensor_count,
+                snap->psu_sensor_count) != 0) {
         return -1;
     }
 
     return w.failed ? -1 : (int)w.pos;
 }
-

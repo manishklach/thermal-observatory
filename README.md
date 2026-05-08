@@ -10,6 +10,7 @@ Today the repo covers:
 - GPUs: NVIDIA, AMD
 - Host interfaces: `hwmon`, `thermal_zone`, `powercap`/RAPL, vendor sysfs
 - Vendor interfaces: NVML, ROCm SMI, CUDA runtime correlation
+- Datacenter interfaces: IPMI scaffold, Redfish scaffold, DCGM scaffold
 - Experimental privileged path: kernel module scaffold for future deep collectors
 
 The goal is not to replace vendor tools. The goal is to provide one repository and one normalized API that can:
@@ -65,8 +66,9 @@ docs/                    Design and architecture docs
 | arm64 frequency | `cpufreq` | none |
 | NVIDIA GPU telemetry | NVML | `nvidia-smi` script fallback |
 | NVIDIA runtime correlation | CUDA runtime | PCI/UUID matching via NVML |
+| NVIDIA fleet integration | DCGM scaffold | NVML-only mode |
 | AMD GPU | ROCm SMI | `amdgpu` hwmon |
-| Chassis / board sensors | `hwmon` | IPMI left experimental |
+| Chassis / board sensors | `hwmon`, IPMI scaffold, Redfish scaffold | none |
 
 ## Architecture Principles
 
@@ -163,6 +165,22 @@ For AMD, the framework prefers:
 
 The next comparable addition on the AMD side is a runtime-correlation layer similar to the new CUDA path.
 
+## Datacenter Path
+
+The framework now has the beginning of a datacenter telemetry layer:
+
+- `IPMI` scaffold via `ipmitool sdr elist all`
+- `Redfish` scaffold via `TM_REDFISH_SAMPLE`
+- `DCGM` scaffold via `dcgmi`
+
+This is the start of the “silicon plus environment” model:
+
+- GPU temperatures and throttle reasons explain what the accelerator is doing
+- board, fan, and PSU telemetry explain whether the node or room is contributing
+- DCGM is the natural NVIDIA fleet-side integration point
+
+The immediate value is schema and integration-point clarity. The next value is real correlation across those layers.
+
 ## Output Model
 
 The public API in [include/thermal_monitor.h](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/include/thermal_monitor.h) is the center of the repo. It currently models:
@@ -182,12 +200,16 @@ The JSON output now emits full structured sections for:
 - AMD GPUs
 - `hwmon` sensors
 - thermal zones
+- board sensors
+- fan sensors
+- PSU sensors
 - capability mask plus capability names
 - summary counts
 
 The current schema version is `0.2.0`. The next refinement is per-metric provenance objects instead of per-object source strings.
 
 See the synthetic schema example in [samples/synthetic-linux-x86-mock-snapshot.json](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/samples/synthetic-linux-x86-mock-snapshot.json).
+See the datacenter direction note in [docs/datacenter-telemetry.md](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/docs/datacenter-telemetry.md).
 
 ## Testability
 
@@ -237,6 +259,7 @@ Near-term:
 - add Prometheus textfile export
 - add stronger test fixtures and sample captures
 - add CI around fixture-backed Linux collector tests
+- harden IPMI, Redfish, and DCGM collectors with real platform validation
 
 Later:
 

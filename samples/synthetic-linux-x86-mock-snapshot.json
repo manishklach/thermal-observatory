@@ -52,12 +52,18 @@
       "unit": "celsius"
     }
   ],
+  "board_sensors": [],
+  "fan_sensors": [],
+  "psu_sensors": [],
   "summary": {
     "cpu_package_count": 1,
     "arm_cluster_count": 0,
     "nvidia_gpu_count": 0,
     "amd_gpu_count": 0,
     "hwmon_sensor_count": 1,
-    "thermal_zone_count": 1
+    "thermal_zone_count": 1,
+    "board_sensor_count": 0,
+    "fan_sensor_count": 0,
+    "psu_sensor_count": 0
   }
 }
