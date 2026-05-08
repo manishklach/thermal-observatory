@@ -1,0 +1,16 @@
+build/
+dist/
+*.o
+*.ko
+*.mod
+*.mod.c
+*.order
+*.symvers
+*.cmd
+*.dwo
+*.tmp
+*.log
+*.out
+thermal_monitor
+compile_commands.json
+
