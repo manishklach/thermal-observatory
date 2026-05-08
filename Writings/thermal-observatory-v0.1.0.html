@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Why Thermal Observatory Exists</title>
+  <meta name="description" content="A detailed essay on what Thermal Observatory is, why thermal observability is fragmented today, and why a normalized framework across CPU, GPU, board, and datacenter telemetry matters.">
+  <style>
+    :root {
+      --bg: #f4f1ea;
+      --paper: #fffdf8;
+      --ink: #1f2933;
+      --muted: #5b6773;
+      --line: #d8d1c5;
+      --accent: #8a3b12;
+      --accent-soft: #f2e3d8;
+      --navy: #19324a;
+      --code: #f6f0e7;
+      --shadow: 0 18px 50px rgba(25, 50, 74, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(138, 59, 18, 0.08), transparent 28%),
+        linear-gradient(180deg, #efe9de 0%, var(--bg) 35%, #f7f4ed 100%);
+      line-height: 1.7;
+    }
+
+    a {
+      color: var(--accent);
+    }
+
+    .site-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+      background:
+        linear-gradient(120deg, rgba(25, 50, 74, 0.96), rgba(41, 79, 105, 0.94)),
+        linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0));
+      color: #f7f3ec;
+      padding: 20px 24px 72px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .site-header::after {
+      content: "";
+      position: absolute;
+      inset: auto -80px -90px auto;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(242, 227, 216, 0.24), rgba(242, 227, 216, 0));
+    }
+
+    .header-inner,
+    .content,
+    .site-footer-inner {
+      width: min(1080px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .brandbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 20px;
+      align-items: center;
+      justify-content: space-between;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 0.95rem;
+      margin-bottom: 48px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(180deg, #ffb36b, #c24b18);
+      box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.06);
+    }
+
+    .brand-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-links a {
+      color: #f7f3ec;
+      text-decoration: none;
+      opacity: 0.9;
+    }
+
+    .hero-kicker {
+      display: inline-block;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: #d7e5f3;
+      margin-bottom: 14px;
+    }
+
+    .hero-title {
+      margin: 0;
+      max-width: 900px;
+      font-size: clamp(2.4rem, 5vw, 4.6rem);
+      line-height: 1.04;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-dek {
+      max-width: 820px;
+      margin: 22px 0 0;
+      color: #dbe6ef;
+      font-size: 1.15rem;
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.75;
+    }
+
+    .hero-meta {
+      margin-top: 26px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #d1dce7;
+      font-size: 0.94rem;
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
+      gap: 28px;
+      margin-top: -38px;
+      padding-bottom: 48px;
+      align-items: start;
+    }
+
+    .toc,
+    .article-shell {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+    }
+
+    .toc {
+      position: sticky;
+      top: 20px;
+      padding: 20px 18px;
+      border-radius: 18px;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .toc h2 {
+      margin: 0 0 12px;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--navy);
+    }
+
+    .toc ol {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .toc li + li {
+      margin-top: 8px;
+    }
+
+    .toc a {
+      text-decoration: none;
+      color: var(--muted);
+    }
+
+    .article-shell {
+      border-radius: 26px;
+      overflow: hidden;
+    }
+
+    .article-header {
+      padding: 28px 36px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fffaf1, #fffdf8);
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .article-header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    article {
+      padding: 18px 36px 40px;
+    }
+
+    article h2 {
+      margin-top: 38px;
+      margin-bottom: 12px;
+      color: var(--navy);
+      font-size: 1.9rem;
+      line-height: 1.2;
+    }
+
+    article h3 {
+      margin-top: 28px;
+      margin-bottom: 10px;
+      color: var(--accent);
+      font-size: 1.2rem;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    article p,
+    article li {
+      font-size: 1.04rem;
+    }
+
+    article ul,
+    article ol {
+      padding-left: 22px;
+    }
+
+    .lead {
+      font-size: 1.12rem;
+      color: #31404f;
+    }
+
+    .callout {
+      margin: 24px 0;
+      padding: 18px 20px;
+      border-left: 4px solid var(--accent);
+      background: var(--accent-soft);
+      border-radius: 10px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: #3c434b;
+    }
+
+    .callout strong {
+      color: var(--navy);
+    }
+
+    pre,
+    code {
+      font-family: Consolas, "SFMono-Regular", Monaco, monospace;
+    }
+
+    pre {
+      overflow-x: auto;
+      background: var(--code);
+      border: 1px solid #eadfce;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 0.92rem;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin: 22px 0 10px;
+    }
+
+    .metric-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      background: #fffaf4;
+    }
+
+    .metric-card h4 {
+      margin: 0 0 8px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--navy);
+      font-size: 1rem;
+    }
+
+    .metric-card p {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .diagram {
+      margin: 26px 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: #fffaf4;
+    }
+
+    .site-footer {
+      border-top: 1px solid var(--line);
+      background: #f3ede2;
+      color: var(--muted);
+      padding: 24px;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+
+    .site-footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.94rem;
+    }
+
+    .site-footer a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    @media (max-width: 960px) {
+      .content {
+        grid-template-columns: 1fr;
+      }
+
+      .toc {
+        position: static;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .site-header {
+        padding: 18px 18px 62px;
+      }
+
+      .article-header,
+      article {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brandbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span>Thermal Observatory</span>
+        </div>
+        <nav class="brand-links" aria-label="Primary">
+          <a href="https://github.com/manishklach/thermal-observatory">Repository</a>
+          <a href="../README.md">README</a>
+          <a href="../docs/releases-v0.1.0.md">Release Notes</a>
+        </nav>
+      </div>
+
+      <div class="hero-kicker">Writings / Essay / v0.1.0</div>
+      <h1 class="hero-title">Why Thermal Observatory Exists</h1>
+      <p class="hero-dek">
+        Thermal telemetry is everywhere in modern servers, but it is still fragmented across vendor CLIs,
+        Linux kernel interfaces, BMC tools, and fleet-specific stacks. This essay explains why that fragmentation
+        matters, how the world usually monitors thermals today, and why <code>thermal-observatory</code> is an
+        important normalization layer for CPU, GPU, board, and datacenter telemetry.
+      </p>
+      <div class="hero-meta">
+        <span>Project: <a href="https://github.com/manishklach/thermal-observatory" style="color:#fff;">manishklach/thermal-observatory</a></span>
+        <span>Release: v0.1.0</span>
+        <span>Schema: 0.3.0</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <aside class="toc" aria-label="Table of contents">
+      <h2>On This Page</h2>
+      <ol>
+        <li><a href="#problem">The Problem</a></li>
+        <li><a href="#today">How It Is Done Today</a></li>
+        <li><a href="#what-is-it">What Thermal Observatory Is</a></li>
+        <li><a href="#why-needed">Why This Is Needed Now</a></li>
+        <li><a href="#what-addresses">What It Addresses</a></li>
+        <li><a href="#architecture">Architecture</a></li>
+        <li><a href="#importance">Why The Repo Matters</a></li>
+        <li><a href="#capabilities">Current Capabilities</a></li>
+        <li><a href="#limits">What It Does Not Claim Yet</a></li>
+        <li><a href="#future">Where It Could Go</a></li>
+      </ol>
+    </aside>
+
+    <section class="article-shell">
+      <div class="article-header">
+        <p>
+          This article accompanies the repository and release documentation. It explains the motivation,
+          system design philosophy, operational relevance, and strategic direction of
+          <code>thermal-observatory</code> in a form suitable for a public project writeup.
+        </p>
+      </div>
+
+      <article>
+        <p class="lead">
+          We have more thermal data than ever, but less coherence than we need. Modern systems expose temperatures,
+          power limits, throttling state, clocks, board thermals, chassis airflow, and platform health across many
+          layers. Every layer is useful. None of them, by itself, is enough.
+        </p>
+
+        <div class="callout">
+          <strong>Core thesis:</strong> thermal monitoring is no longer just a sensor-reading problem. It is now
+          an observability problem that needs normalization, provenance, runtime correlation, and integration into
+          monitoring systems.
+        </div>
+
+        <h2 id="problem">The Problem</h2>
+        <p>
+          If you are debugging a server today, you often end up pulling data from several separate tools:
+          <code>nvidia-smi</code>, <code>rocm-smi</code>, <code>sensors</code>, <code>/sys/class/thermal</code>,
+          <code>/sys/class/powercap</code>, <code>ipmitool</code>, and sometimes <code>dcgmi</code>.
+        </p>
+        <p>
+          That works for one-off inspection, but it breaks down quickly when you want a stable, programmable,
+          cross-vendor, multi-layer answer. The common failures are familiar:
+        </p>
+        <ul>
+          <li>There is no single normalized output.</li>
+          <li>Provenance gets lost once values are copied into scripts or dashboards.</li>
+          <li>Runtime identity and telemetry identity are often disconnected.</li>
+          <li>Silicon and environment data live in different tools.</li>
+          <li>Cross-vendor comparison turns into CLI archaeology.</li>
+          <li>Automation is built on brittle text parsing.</li>
+        </ul>
+
+        <h2 id="today">How It Is Done Today</h2>
+        <p>
+          Thermal monitoring is usually done in one of four broad styles, each useful, each incomplete.
+        </p>
+
+        <h3>1. Vendor CLI First</h3>
+        <p>
+          Many teams start here. NVIDIA users rely on <code>nvidia-smi</code>. AMD users rely on
+          <code>rocm-smi</code>. Cluster operators may add <code>dcgmi</code>. This is good at device-level
+          introspection, but it does not solve system-wide correlation.
+        </p>
+
+        <h3>2. Linux Interface First</h3>
+        <p>
+          This path uses generic kernel surfaces such as <code>hwmon</code>, <code>thermal_zone</code>,
+          <code>powercap</code>, and <code>cpufreq</code>. It is broad within Linux, but often uneven across
+          platforms and generations.
+        </p>
+
+        <h3>3. BMC / Platform First</h3>
+        <p>
+          Datacenter operators often start with <code>ipmitool</code>, Redfish, or vendor BMC dashboards. That
+          gives useful environmental and chassis context, but it usually does not explain enough about the CPU or GPU.
+        </p>
+
+        <h3>4. Ad Hoc Script Glue</h3>
+        <p>
+          Many organizations end up with shell scripts, Python glue, custom exporters, and host-specific dashboards.
+          That solves the immediate problem, but rarely survives hardware churn cleanly.
+        </p>
+
+        <h2 id="what-is-it">What Thermal Observatory Is</h2>
+        <p>
+          <code>thermal-observatory</code> is a hardware-aware thermal observability framework for:
+        </p>
+        <ul>
+          <li>CPU telemetry</li>
+          <li>GPU telemetry</li>
+          <li>board and chassis telemetry</li>
+          <li>platform and fleet-facing integration points</li>
+        </ul>
+        <p>
+          It is not trying to replace every vendor tool. It is trying to become the normalization and correlation
+          layer above them.
+        </p>
+
+        <div class="metric-grid">
+          <div class="metric-card">
+            <h4>Normalize</h4>
+            <p>Collect from many thermal surfaces and expose one shared snapshot model.</p>
+          </div>
+          <div class="metric-card">
+            <h4>Preserve Provenance</h4>
+            <p>Keep per-metric source, units, timestamp, and error fields visible to consumers.</p>
+          </div>
+          <div class="metric-card">
+            <h4>Correlate</h4>
+            <p>Bridge runtime identity, silicon telemetry, and datacenter environment signals.</p>
+          </div>
+          <div class="metric-card">
+            <h4>Export</h4>
+            <p>Support structured JSON, text output, and Prometheus-oriented monitoring workflows.</p>
+          </div>
+        </div>
+
+        <h2 id="why-needed">Why This Is Needed Now</h2>
+        <h3>Heterogeneous Compute Is Normal</h3>
+        <p>
+          Modern nodes mix x86 or ARM CPUs with NVIDIA or AMD accelerators, Linux thermal interfaces, and
+          BMC-managed platform sensors. Thermal tooling that only understands one layer is now incomplete by default.
+        </p>
+
+        <h3>Throttling Is Multi-Layer</h3>
+        <p>
+          A slowdown is not always just “the GPU got hot.” It might be local accelerator heat, fan saturation,
+          inlet temperature, board cooling issues, PSU behavior, or rack-level thermal stress. If you only inspect
+          silicon telemetry, you miss the wider context.
+        </p>
+
+        <h3>Observability Systems Need Stable Machine Output</h3>
+        <p>
+          Humans can tolerate ad hoc CLIs. Monitoring systems cannot. For automation, alerting, and dashboards, you
+          need stable JSON, explicit units, explicit provenance, and export paths like Prometheus textfile output.
+        </p>
+
+        <h2 id="what-addresses">What It Addresses</h2>
+        <p>
+          The repo is designed to address a few specific gaps in the current tooling landscape.
+        </p>
+        <ul>
+          <li>One structured snapshot instead of many incompatible commands.</li>
+          <li>Per-metric provenance rather than hidden data lineage.</li>
+          <li>NVIDIA separation between NVML telemetry and CUDA runtime correlation.</li>
+          <li>Growth path from silicon-only telemetry to silicon-plus-environment telemetry.</li>
+          <li>Fixture-backed testing through <code>TM_SYSROOT</code> so Linux collectors can be validated without live hardware.</li>
+        </ul>
+
+        <h2 id="architecture">Architecture</h2>
+        <p>
+          At the center of the project is the normalized snapshot contract in
+          <a href="../include/thermal_monitor.h">include/thermal_monitor.h</a>. That header models CPU packages,
+          ARM clusters, NVIDIA GPUs, AMD GPUs, generic Linux sensors, board sensors, fans, and PSUs.
+        </p>
+
+        <div class="diagram">
+          <div class="mermaid">
+flowchart TD
+    A["Linux kernel interfaces<br/>hwmon / thermal_zone / powercap / cpufreq"] --> N["Normalized snapshot"]
+    B["Vendor APIs<br/>NVML / ROCm SMI / CUDA runtime"] --> N
+    C["Platform telemetry<br/>IPMI / Redfish"] --> N
+    D["Fleet integration<br/>DCGM"] --> N
+    N --> J["Structured JSON with per-metric provenance"]
+    N --> P["Prometheus textfile/stdout export"]
+    N --> T["Text output for humans"]
+          </div>
+        </div>
+
+        <p>
+          The repository does not assume that one source is always enough. Instead it layers sources into a shared
+          model and keeps the source visible in the output.
+        </p>
+
+        <div class="diagram">
+          <div class="mermaid">
+flowchart LR
+    A["Authoritative vendor / kernel interface"] --> B["Normalized collector"]
+    B --> C["Snapshot model"]
+    C --> D["JSON / Prometheus / text output"]
+
+    A1["Examples:<br/>NVML<br/>ROCm SMI<br/>powercap<br/>hwmon"] --> A
+    A2["Fallbacks:<br/>amdgpu hwmon<br/>generic thermal_zone<br/>runtime correlation"] --> B
+          </div>
+        </div>
+
+        <h3>Why The Structure Matters</h3>
+        <pre><code>include/                 Public snapshot model and API
+src/cpu/                 x86 and arm64 CPU collectors
+src/gpu/                 NVIDIA and AMD collectors
+src/platform/            Linux paths, IPMI, Redfish scaffolds
+src/format/              JSON, Prometheus, and text output
+tests/                   Fixture-backed validation
+samples/                 Example outputs
+docs/                    Design, architecture, release, and blog docs</code></pre>
+        <p>
+          This structure is important because it separates collection from formatting, keeps the snapshot model central,
+          and leaves space for platform and vendor growth without collapsing into ad hoc script glue.
+        </p>
+
+        <h2 id="importance">Why The Repo Matters</h2>
+        <p>
+          This project aims to occupy a missing layer in the systems stack.
+        </p>
+        <h3>Vendor Tools Are Necessary But Narrow</h3>
+        <p>
+          Vendor tools are strong at device-level introspection, but they are not trying to be a multi-vendor,
+          multi-layer normalization framework.
+        </p>
+        <h3>Generic Linux Interfaces Are Broad But Uneven</h3>
+        <p>
+          Linux gives broad access, but not always consistent semantics across hardware generations.
+        </p>
+        <h3>Datacenter Operators Need Correlation</h3>
+        <p>
+          Operators increasingly need to answer questions like: is this node throttling because the GPU hotspot is high,
+          because inlet air is hot, or because the board and PSU are thermally stressed? That is not a one-tool question.
+        </p>
+        <h3>Researchers Need Programmable Output</h3>
+        <p>
+          Performance engineers, kernel developers, and MLOps teams need structured output they can feed into
+          dashboards, analyzers, and automation pipelines.
+        </p>
+
+        <h2 id="capabilities">Current Capabilities</h2>
+        <p>As of <code>v0.1.0</code>, the repo supports:</p>
+        <ul>
+          <li>versioned JSON schema</li>
+          <li>per-metric provenance in JSON</li>
+          <li>Prometheus export</li>
+          <li>Linux fixture-backed collector testing</li>
+          <li>NVIDIA telemetry via NVML</li>
+          <li>NVIDIA runtime correlation via CUDA</li>
+          <li>AMD telemetry via ROCm SMI and <code>amdgpu</code> fallback</li>
+          <li>Linux thermal interfaces such as <code>hwmon</code>, <code>thermal_zone</code>, <code>powercap</code>, and <code>cpufreq</code></li>
+          <li>early datacenter telemetry scaffolds for IPMI, Redfish, and DCGM</li>
+        </ul>
+        <p>
+          The current release notes are documented in <a href="../docs/releases-v0.1.0.md">docs/releases-v0.1.0.md</a>.
+        </p>
+
+        <h2 id="limits">What It Does Not Claim Yet</h2>
+        <p>
+          It is important to be precise about the current state.
+        </p>
+        <ul>
+          <li>It does not yet claim complete production hardening.</li>
+          <li>It does not yet claim broad real-hardware validation across many machine classes.</li>
+          <li>It does not yet claim full Redfish JSON support.</li>
+          <li>It does not yet claim deep DCGM field ingestion.</li>
+          <li>It does not yet claim AMD runtime-correlation parity with CUDA.</li>
+        </ul>
+        <p>
+          That honesty is one of the project’s strengths. It is explicit about what is implemented, what is scaffolded,
+          and what still needs fleet validation.
+        </p>
+
+        <h2 id="future">Where It Could Go</h2>
+        <p>
+          Several next steps would turn the current alpha into a much stronger operational framework:
+        </p>
+        <ul>
+          <li>real Redfish JSON parsing</li>
+          <li>stronger IPMI normalization</li>
+          <li>deeper DCGM field support</li>
+          <li>ROCm runtime correlation to match the CUDA path</li>
+          <li>real hardware sample captures from production-class systems</li>
+          <li>correlation hints and diagnostics in the JSON output</li>
+          <li>freshness and stale-data handling</li>
+        </ul>
+
+        <div class="callout">
+          <strong>The larger point:</strong> thermal telemetry is no longer just a sensor-reading problem. It is an
+          observability problem. That means we need normalized structure, explicit provenance, layered data sources,
+          monitoring integration, and room for platform-level reasoning.
+        </div>
+
+        <h2>Read The Repo</h2>
+        <ul>
+          <li><a href="https://github.com/manishklach/thermal-observatory">Repository</a></li>
+          <li><a href="../README.md">README</a></li>
+          <li><a href="../include/thermal_monitor.h">Public Model</a></li>
+          <li><a href="../docs/design.md">Design Notes</a></li>
+          <li><a href="../docs/architecture.md">Architecture Notes</a></li>
+          <li><a href="../docs/datacenter-telemetry.md">Datacenter Telemetry Direction</a></li>
+          <li><a href="../docs/releases-v0.1.0.md">Release Notes</a></li>
+        </ul>
+
+        <p>
+          The project is still early, but it already shows why this layer is needed: not because we lack thermal
+          interfaces, but because we lack a clean way to unify them.
+        </p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span>Thermal Observatory Writings</span>
+      <span>
+        Built around <a href="https://github.com/manishklach/thermal-observatory">the repository</a>,
+        release <a href="../docs/releases-v0.1.0.md">v0.1.0 notes</a>, and the public API contract.
+      </span>
+    </div>
+  </footer>
+
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: {
+        curve: 'basis'
+      }
+    });
+  </script>
+</body>
+</html>
