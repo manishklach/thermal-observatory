@@ -218,6 +218,7 @@ The current schema version is `0.3.0`. Metrics now carry per-metric provenance i
 
 See the synthetic schema example in [samples/synthetic-linux-x86-mock-snapshot.json](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/samples/synthetic-linux-x86-mock-snapshot.json).
 See the datacenter direction note in [docs/datacenter-telemetry.md](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/docs/datacenter-telemetry.md).
+See the long-form writeup in [docs/blog-why-thermal-observatory.md](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/docs/blog-why-thermal-observatory.md).
 
 ## Prometheus
 
