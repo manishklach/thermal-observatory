@@ -16,7 +16,8 @@ SRC := \
 	src/gpu/nvidia_dcgm.c \
 	src/gpu/gpu_amd.c \
 	src/format/text.c \
-	src/format/json.c
+	src/format/json.c \
+	src/format/prometheus.c
 
 all: thermal_monitor
 

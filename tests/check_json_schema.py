@@ -13,6 +13,7 @@ def main() -> int:
 
     required = [
         "schema_version",
+        "release_version",
         "timestamp",
         "arch",
         "capability_mask",
@@ -46,6 +47,8 @@ def main() -> int:
     assert "board_sensor_count" in data["summary"]
     assert "fan_sensor_count" in data["summary"]
     assert "psu_sensor_count" in data["summary"]
+    if data["cpu_packages"]:
+        assert "metrics" in data["cpu_packages"][0]
 
     print("json schema check passed")
     return 0

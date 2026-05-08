@@ -39,12 +39,18 @@ int main(int argc, char **argv) {
     tm_snapshot_t snap;
     int watch = 0;
     int interval = 1;
+    int want_prometheus = 0;
+    const char *prometheus_textfile = NULL;
 
     tm_context_init(&ctx);
 
     for (int i = 1; i < argc; ++i) {
         if (strcmp(argv[i], "--json") == 0) {
             ctx.want_json = true;
+        } else if (strcmp(argv[i], "--prometheus") == 0) {
+            want_prometheus = 1;
+        } else if (strcmp(argv[i], "--prometheus-textfile") == 0 && i + 1 < argc) {
+            prometheus_textfile = argv[++i];
         } else if (strcmp(argv[i], "--watch") == 0 || strcmp(argv[i], "-w") == 0) {
             watch = 1;
         } else if (strcmp(argv[i], "--interval") == 0 && i + 1 < argc) {
@@ -55,7 +61,7 @@ int main(int argc, char **argv) {
         } else if (strcmp(argv[i], "--experimental-kernel") == 0) {
             ctx.want_experimental_kernel = true;
         } else if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-            printf("Usage: %s [--json] [--watch] [--interval N] [--experimental-kernel]\n", argv[0]);
+            printf("Usage: %s [--json] [--prometheus] [--prometheus-textfile PATH] [--watch] [--interval N] [--experimental-kernel]\n", argv[0]);
             return 0;
         }
     }
@@ -65,9 +71,24 @@ int main(int argc, char **argv) {
 
     do {
         char json_buf[65536];
+        char prom_buf[65536];
 
         tm_collect_snapshot(&ctx, &snap);
-        if (ctx.want_json) {
+        if (prometheus_textfile) {
+            FILE *fp = fopen(prometheus_textfile, "w");
+            if (!fp) {
+                perror("fopen");
+                return 1;
+            }
+            if (tm_snapshot_to_prometheus(&snap, prom_buf, sizeof(prom_buf)) >= 0) {
+                fputs(prom_buf, fp);
+            }
+            fclose(fp);
+        } else if (want_prometheus) {
+            if (tm_snapshot_to_prometheus(&snap, prom_buf, sizeof(prom_buf)) >= 0) {
+                fputs(prom_buf, stdout);
+            }
+        } else if (ctx.want_json) {
             if (tm_snapshot_to_json(&snap, json_buf, sizeof(json_buf)) >= 0) {
                 puts(json_buf);
             }

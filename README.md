@@ -2,6 +2,8 @@
 
 `thermal-observatory` is a hardware-aware thermal observability framework for CPU, GPU, board, and platform telemetry.
 
+Current release: `v0.1.0`
+
 It is meant to become a generic framework, not just a wrapper around one operating-system path or one vendor stack. The current implementation focus is Linux because that is where the lowest-level server telemetry interfaces are easiest to access, but the repository is structured as a framework that can grow into a broader cross-platform and cross-vendor system.
 
 Today the repo covers:
@@ -206,10 +208,42 @@ The JSON output now emits full structured sections for:
 - capability mask plus capability names
 - summary counts
 
-The current schema version is `0.2.0`. The next refinement is per-metric provenance objects instead of per-object source strings.
+The current schema version is `0.3.0`. Metrics now carry per-metric provenance in the JSON output with:
+
+- `value`
+- `unit`
+- `source`
+- `timestamp_ns`
+- `error`
 
 See the synthetic schema example in [samples/synthetic-linux-x86-mock-snapshot.json](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/samples/synthetic-linux-x86-mock-snapshot.json).
 See the datacenter direction note in [docs/datacenter-telemetry.md](/C:/Users/ManishKL/Documents/Playground/thermal-observatory/docs/datacenter-telemetry.md).
+
+## Prometheus
+
+The repo now supports Prometheus-oriented output in two ways:
+
+1. stdout mode:
+
+```bash
+./thermal_monitor --prometheus
+```
+
+2. textfile collector mode:
+
+```bash
+./thermal_monitor --prometheus-textfile /var/lib/node_exporter/thermal.prom
+```
+
+Metric families include:
+
+- `thermal_gpu_temperature_celsius`
+- `thermal_gpu_power_watts`
+- `thermal_gpu_throttle_reason`
+- `thermal_cpu_package_temperature_celsius`
+- `thermal_board_sensor_value`
+- `thermal_fan_rpm`
+- `thermal_psu_power_watts`
 
 ## Testability
 
@@ -271,7 +305,15 @@ Later:
 
 ## Current Status
 
-This repo is at the “framework scaffold plus initial collectors” stage. The architecture is cleaner now, and the NVIDIA story is better separated, but real Linux build-and-run validation is still required across actual hardware.
+This repo is now best described as a usable `v0.1.0` alpha. The architecture is stable enough for experimentation and integration work:
+
+- structured JSON with per-metric provenance
+- Prometheus textfile export
+- fixture-backed Linux collector tests
+- NVIDIA telemetry plus CUDA correlation
+- early datacenter platform telemetry scaffolding
+
+What it still needs most is real Linux hardware validation and hardening of the datacenter collectors.
 
 ## Notes
 

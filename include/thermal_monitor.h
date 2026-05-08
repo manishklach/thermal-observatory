@@ -6,6 +6,10 @@
 #include <stdint.h>
 #include <time.h>
 
+#define TM_VERSION_MAJOR 0
+#define TM_VERSION_MINOR 1
+#define TM_VERSION_PATCH 0
+
 #define TM_MAX_CPU_PACKAGES 16
 #define TM_MAX_CPU_CORES 512
 #define TM_MAX_ARM_CLUSTERS 64
@@ -175,6 +179,7 @@ void tm_context_init(tm_context_t *ctx);
 int tm_collect_snapshot(tm_context_t *ctx, tm_snapshot_t *snap);
 void tm_print_snapshot_text(const tm_snapshot_t *snap);
 int tm_snapshot_to_json(const tm_snapshot_t *snap, char *buf, size_t len);
+int tm_snapshot_to_prometheus(const tm_snapshot_t *snap, char *buf, size_t len);
 
 int tm_collect_generic_linux(tm_context_t *ctx, tm_snapshot_t *snap);
 int tm_collect_x86(tm_context_t *ctx, tm_snapshot_t *snap);

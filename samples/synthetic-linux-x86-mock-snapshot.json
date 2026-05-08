@@ -1,8 +1,10 @@
 {
-  "schema_version": "0.2.0",
+  "schema_version": "0.3.0",
+  "release_version": "0.1.0",
   "timestamp": {
     "sec": 0,
-    "nsec": 0
+    "nsec": 0,
+    "timestamp_ns": 0
   },
   "arch": "x86_64",
   "capability_mask": 7,
@@ -14,19 +16,76 @@
   "cpu_packages": [
     {
       "package_id": 0,
-      "source": "coretemp+powercap",
-      "package_temp_c": 44.0,
-      "tjmax_c": 100.0,
-      "rapl_energy_uj": 123456789.0,
-      "power_limit_1_w": 250.0,
-      "power_limit_2_w": 300.0,
+      "metrics": {
+        "package_temp_c": {
+          "value": 44.0,
+          "unit": "celsius",
+          "source": "coretemp",
+          "timestamp_ns": 0,
+          "error": null
+        },
+        "tjmax_c": {
+          "value": 100.0,
+          "unit": "celsius",
+          "source": "coretemp",
+          "timestamp_ns": 0,
+          "error": null
+        },
+        "rapl_energy_uj": {
+          "value": 123456789.0,
+          "unit": "microjoules",
+          "source": "powercap",
+          "timestamp_ns": 0,
+          "error": null
+        },
+        "power_limit_1_w": {
+          "value": 250.0,
+          "unit": "watts",
+          "source": "powercap",
+          "timestamp_ns": 0,
+          "error": null
+        },
+        "power_limit_2_w": {
+          "value": 300.0,
+          "unit": "watts",
+          "source": "powercap",
+          "timestamp_ns": 0,
+          "error": null
+        }
+      },
       "cores": [
         {
           "core_id": 0,
-          "temp_c": 44.0,
-          "crit_c": 100.0,
-          "max_c": 85.0,
-          "throttling": false
+          "metrics": {
+            "temp_c": {
+              "value": 44.0,
+              "unit": "celsius",
+              "source": "coretemp",
+              "timestamp_ns": 0,
+              "error": null
+            },
+            "crit_c": {
+              "value": 100.0,
+              "unit": "celsius",
+              "source": "coretemp",
+              "timestamp_ns": 0,
+              "error": null
+            },
+            "max_c": {
+              "value": 85.0,
+              "unit": "celsius",
+              "source": "coretemp",
+              "timestamp_ns": 0,
+              "error": null
+            },
+            "throttling": {
+              "value": false,
+              "unit": "bool",
+              "source": "coretemp",
+              "timestamp_ns": 0,
+              "error": null
+            }
+          }
         }
       ]
     }
@@ -36,20 +95,28 @@
   "amd_gpus": [],
   "hwmon_sensors": [
     {
-      "source": "hwmon",
       "name": "coretemp",
       "label": "Package id 0",
-      "value": 45.5,
-      "unit": "celsius"
+      "metric": {
+        "value": 45.5,
+        "unit": "celsius",
+        "source": "hwmon",
+        "timestamp_ns": 0,
+        "error": null
+      }
     }
   ],
   "thermal_zones": [
     {
-      "source": "thermal_zone",
       "name": "thermal_zone0",
       "label": "x86_pkg_temp",
-      "value": 47.0,
-      "unit": "celsius"
+      "metric": {
+        "value": 47.0,
+        "unit": "celsius",
+        "source": "thermal_zone",
+        "timestamp_ns": 0,
+        "error": null
+      }
     }
   ],
   "board_sensors": [],
